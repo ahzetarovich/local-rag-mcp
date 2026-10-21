@@ -1,0 +1,53 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: big-bear-ollama-cpu
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: rag-chroma-db
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/data/chroma_data:/data
+    environment:
+      - ALLOW_RESET=TRUE
+    restart: unless-stopped
+
+  rag-api:
+    build: ./rag-api
+    container_name: rag-fastapi
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_HOST=${OLLAMA_HOST}
+      - CHROMA_HOST=${CHROMA_HOST}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+    depends_on:
+      - ollama
+      - chroma
+    restart: unless-stopped
+
+  rag-mcp:
+    build: ./rag-api
+    container_name: rag-mcp
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./rag-api:/app
+    restart: unless-stopped
+    command: python mcp-server.py
+    depends_on:
+      - rag-api
+
+volumes:
+  ollama_data:
