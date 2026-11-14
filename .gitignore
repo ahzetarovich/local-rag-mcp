@@ -20,3 +20,4 @@ env/
 *.sqlite3
 chroma_data/
 *.bak
+*.bak*
