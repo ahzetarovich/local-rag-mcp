@@ -49,5 +49,21 @@ services:
     depends_on:
       - rag-api
 
+  rag-mcp-http:
+    build: ./rag-api
+    image: local-rag-rag-mcp:latest
+    container_name: rag-mcp-http
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./rag-api:/app
+    restart: unless-stopped
+    command: python mcp-server.py
+    environment:
+      - MCP_TRANSPORT=streamable-http
+      - MCP_PORT=8082
+    depends_on:
+      - rag-api
+
 volumes:
   ollama_data:

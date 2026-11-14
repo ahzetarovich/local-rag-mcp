@@ -19,3 +19,4 @@ env/
 # Database files (just in case)
 *.sqlite3
 chroma_data/
+*.bak
