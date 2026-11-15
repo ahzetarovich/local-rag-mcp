@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import logging
+import os
+import time
+import uuid
+from typing import Optional
+
 import chromadb
 import ollama
-import uuid
-import os
-import logging
-import time
-from typing import Optional
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("rag-api")

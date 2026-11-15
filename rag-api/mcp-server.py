@@ -1,5 +1,6 @@
-import httpx
 import os
+
+import httpx
 from fastmcp import FastMCP
 
 RAG_API_URL = os.getenv("RAG_API_URL", "http://rag-fastapi:8080")
