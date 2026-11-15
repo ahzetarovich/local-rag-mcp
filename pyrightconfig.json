@@ -1,0 +1,9 @@
+{
+  "typeCheckingMode": "standard",
+  "reportAny": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportMissingTypeArgument": "none",
+  "reportUnusedCallResult": "none"
+}
