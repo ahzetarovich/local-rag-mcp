@@ -7,6 +7,7 @@ from typing import Optional
 import chromadb
 import ollama
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -24,6 +25,7 @@ try:
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=8000)
     collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
     ollama_client = ollama.Client(host=OLLAMA_HOST, timeout=120.0)
+    ollama_health = ollama.Client(host=OLLAMA_HOST, timeout=3.0)
 except Exception as e:
     logger.error(f"Error initializing clients: {e}")
     raise
@@ -50,7 +52,38 @@ class DeleteRequest(BaseModel):
 
 @app.get("/health", operation_id="health_check")
 def health():
-    return {"status": "ok", "service": "rag-fastapi"}
+    deps = {}
+    documents = 0
+    status = "ok"
+
+    #Chroma
+    try:
+        chroma_client.heartbeat()
+        documents = collection.count()
+        deps["chroma"] = "ok"
+
+    except Exception as e:
+        logger.warning("health: chroma unavailable: %s", e)
+        deps["chroma"] = f"error: {e}"
+        status = "degraded"
+
+    #Ollama
+    try:
+        models = ollama_health.list()
+        names = [m.model for m in models.models if m.model]
+        deps["ollama"] = "ok"
+        if not any(n.startswith(EMBEDDING_MODEL) for n in names):
+            deps["ollama"] = f"model {EMBEDDING_MODEL} not loaded"
+            status = "degraded"
+    except Exception as e:
+        logger.warning("health: ollama unavailable: %s", e)
+        deps["ollama"] = f"error: {e}"
+        status = "degraded"
+
+    body = {"status": status, "dependencies": deps, "documents": documents}
+    if status != "ok":
+        return JSONResponse(status_code=503, content=body)
+    return body
 
 
 @app.post("/embed", operation_id="create_embedding")
